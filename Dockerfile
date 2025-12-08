@@ -9,4 +9,4 @@ COPY ./requirements.txt /work/
 RUN pip3 install -r /work/requirements.txt
 
 # Copy Data
-COPY ./testdata/raw /work/data
+COPY ./lms-testdata /work/lms-testdata

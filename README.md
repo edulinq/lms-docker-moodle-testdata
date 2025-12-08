@@ -5,6 +5,20 @@ A [Docker](https://en.wikipedia.org/wiki/Docker_(software)) image running an ins
 This image is based off of [ghcr.io/edulinq/lms-docker-moodle-base](https://github.com/edulinq/lms-docker-moodle-base),
 and includes test data (users, courses, assignments, etc).
 
+## Cloning
+
+This repository includes submodules.
+To fetch these submodules on clone, add the `--recurse-submodules` flag.
+For example:
+```sh
+git clone --recurse-submodules git@github.com:edulinq/lms-docker-moodle-testdata.git
+```
+
+To fetch the submodules after cloning, you can use:
+```sh
+git submodule update --init --recursive
+```
+
 ## Usage
 
 The docker image is fairly standard, and does not require any special care when building or running.
