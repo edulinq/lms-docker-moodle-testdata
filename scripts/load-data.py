@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 
-import datetime
-import http
-import json
 import os
-import urllib.parse
-import re
 import subprocess
 import sys
-import time
 
 import edq.util.pyimport
-import requests
 
 THIS_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(THIS_DIR, '..', 'lms-testdata', 'testdata')
@@ -49,6 +42,7 @@ def run_sql(sql, **kwargs):
 
 def add_users(users):
     path = os.path.join(edq.util.dirent.get_temp_dir(), "users.csv")
+
     for user in users.values():
         keys = USER_ATTRIBUTES.copy()
 
