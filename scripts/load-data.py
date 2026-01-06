@@ -17,32 +17,20 @@ THIS_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DATA_DIR = os.path.join(THIS_DIR, '..', 'lms-testdata', 'testdata')
 LOAD_SCRIPT = os.path.join(THIS_DIR, '..', 'lms-testdata', 'load.py')
 
-ASSIGNMENTS_FILE = os.path.join(DATA_DIR, 'assignments.json')
-COURSES_FILE = os.path.join(DATA_DIR, 'courses.json')
-GROUPSETS_FILE = os.path.join(DATA_DIR, 'groupsets.json')
-SUBMISSIONS_FILE = os.path.join(DATA_DIR, 'submissions.json')
-USERS_FILE = os.path.join(DATA_DIR, 'users.json')
-
-DATA_FILES = [
-    USERS_FILE,
-    COURSES_FILE,
-    ASSIGNMENTS_FILE,
-    GROUPSETS_FILE,
-    SUBMISSIONS_FILE,
-]
-
 SERVER = 'http://127.0.0.1:4000'
 
 USER_ATTRIBUTES = ["username", "firstname", "lastname", "email", "password"]
 COURSE_ATTRIBUTES = ["shortname", "fullname", "idnumber", "category", "enrolment_1", "enrolment_2"]
 
 ROLE_MAPPING = {
-    "other": "student",  # HACK(JK): Want to use guest but Moodle is not allowing it
+    "other": "student",  # HACK(JK): The "guest" role is preferred here, but Moodle is not allowing it.
     "student": "student",
     "grader": "teacher",
     "admin": "editingteacher",
     "owner": "manager",
 }
+
+EMPTY_NAME = "__EMPTY_NAME__"
 
 def run(command, capture_output = False):
     result = subprocess.run(command, shell = True, check = True, capture_output = capture_output)
@@ -60,14 +48,14 @@ def run_sql(sql, **kwargs):
     return run(f'mysql moodle < {path}', **kwargs)
 
 def add_users(users):
-    path = "/tmp/users.csv" #!!!!!!!!!!!!!!!!! change to proper temp location
+    path = os.path.join(edq.util.dirent.get_temp_dir(), "users.csv")
     for user in users.values():
         keys = USER_ATTRIBUTES.copy()
 
         row = [
             user["short-name"],
-            user["name"], # Look at this later!
-            user["name"], # Look at this later!
+            EMPTY_NAME,
+            user["name"],
             user["email"],
             user["password"],
         ]
@@ -124,7 +112,7 @@ def add_users(users):
 
 
 def add_courses(courses):
-    path = "/tmp/courses.csv" #!!!!!!!!!!!!!!!!! change to proper temp location
+    path = os.path.join(edq.util.dirent.get_temp_dir(), "courses.csv")
     for course in courses.values():
         row = [
             course["short-name"],
@@ -176,29 +164,6 @@ def clean_up():
         DELETE FROM mdl_user_preferences;
     """
     run_sql(sql)
-
-# Load the data from disk.
-# All collections will be converted to a dict, keyed by the item's short name (`short-name`).
-# The same short name is used to cross-reference items in this dataset.
-# Returns (matches order of DATA_FILES): users, courses, assignments, groups, submissions.
-def load_test_data():
-    results = []
-
-    for path in DATA_FILES:
-        with open(path, 'r') as file:
-            items = json.load(file)
-
-        mapped_items = {}
-        for item in items:
-            key = item['short-name']
-            if (key in mapped_items):
-                raise ValueError(f"Found duplicate key ('{key}') in data file: '{path}'.")
-
-            mapped_items[key] = item
-
-        results.append(mapped_items)
-
-    return tuple(results)
 
 def main():
     dataset = edq.util.pyimport.import_path(LOAD_SCRIPT).load_test_data(DATA_DIR)
