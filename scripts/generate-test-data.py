@@ -15,13 +15,13 @@ TEST_DATA_DIR: str = os.path.join(THIS_DIR, '..', 'testdata', 'http')
 
 DEFAULT_CONTAINER_NAME: str = 'moodle-generate-test-data'
 DEFAULT_IMAGE_NAME: str = 'ghcr.io/edulinq/lms-docker-moodle-testdata'
-DEFAULT_PORT: int = 3000
+DEFAULT_PORT: int = 4000
 
 def run_cli(args):
     args = {
         'server': f"127.0.0.1:{args.port}",
         'backend_type': 'moodle',
-        'server_start_command': f"docker run --rm -p 80:{args.port} --name '{args.container_name}' '{args.image_name}'",
+        'server_start_command': f"docker run --rm -p 4000:{args.port} --name '{args.container_name}' '{args.image_name}'",
         'server_stop_command': f"docker kill '{args.container_name}'",
         'http_exchanges_out_dir': args.out_dir,
         'fail_fast': args.fail_fast,
