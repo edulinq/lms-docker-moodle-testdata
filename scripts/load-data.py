@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import time
 
 import edq.util.pyimport
 
@@ -153,6 +154,55 @@ def add_courses(courses):
             """
             run_sql(sql)
 
+def add_assignments(assignments, courses):
+    sections = {}
+    for assignment in assignments.values():
+        if (assignment["course"] not in sections):
+            sections[assignment["course"]] = []
+        sections[assignment["course"]].append(assignment["id"])
+        
+        sql = f"""
+            INSERT INTO `mdl_assign` 
+                (id, course, name, intro, introformat, grade, maxattempts, activity, activityformat)
+            VALUES ( 
+                {assignment["id"]}, 
+                {courses[assignment["course"]]["id"]}, 
+                '{assignment["name"]}', 
+                '', 
+                1, 
+                {assignment["max-points"]}, 
+                1, 
+                '', 
+                1
+            );    
+        """
+        run_sql(sql)
+
+    for (course, value) in sections.items():
+        sql = f"""
+            INSERT INTO `mdl_course_sections` 
+                (id, course, sequence)
+            VALUES 
+                ({courses[course]["id"]}, {courses[course]["id"]}, '{','.join(value)}')
+            ;
+        """
+        run_sql(sql)
+
+    # Assignments are module = 1, quizzes are module = 17
+    for (i, assignment) in enumerate(assignments.values()):
+        sql = f"""
+            INSERT INTO `mdl_course_modules` 
+                (id, course, module, instance, section)
+            VALUES (
+                {assignment["id"]}, 
+                {courses[assignment["course"]]["id"]}, 
+                1, 
+                {assignment["id"]}, 
+                {courses[assignment["course"]]["id"]}
+            );
+        """
+        run_sql(sql)
+
 def clean_up():
     sql = f"""
         DELETE FROM mdl_user_preferences;
@@ -171,6 +221,9 @@ def main():
 
     # Add the users.
     add_users(users)
+
+    # Add the assignments.
+    add_assignments(assignments, courses)
 
     # Clean up.
     clean_up()
