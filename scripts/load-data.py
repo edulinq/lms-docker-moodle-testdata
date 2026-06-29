@@ -3,7 +3,6 @@
 import os
 import subprocess
 import sys
-import time
 
 import edq.util.pyimport
 
@@ -160,44 +159,42 @@ def add_assignments(assignments, courses):
         if (assignment["course"] not in sections):
             sections[assignment["course"]] = []
         sections[assignment["course"]].append(assignment["id"])
-        
+
         sql = f"""
-            INSERT INTO `mdl_assign` 
-                (id, course, name, intro, introformat, grade, maxattempts, activity, activityformat)
-            VALUES ( 
-                {assignment["id"]}, 
-                {courses[assignment["course"]]["id"]}, 
-                '{assignment["name"]}', 
-                '', 
-                1, 
-                {assignment["max-points"]}, 
-                1, 
-                '', 
+            INSERT INTO `mdl_assign`
+                (id, course, name, grade, maxattempts, activity, activityformat)
+            VALUES (
+                {assignment["id"]},
+                {courses[assignment["course"]]["id"]},
+                '{assignment["name"]}',
+                {assignment["max-points"]},
+                1,
+                '',
                 1
-            );    
+            );
         """
         run_sql(sql)
 
     for (course, value) in sections.items():
         sql = f"""
-            INSERT INTO `mdl_course_sections` 
+            INSERT INTO `mdl_course_sections`
                 (id, course, sequence)
-            VALUES 
+            VALUES
                 ({courses[course]["id"]}, {courses[course]["id"]}, '{','.join(value)}')
             ;
         """
         run_sql(sql)
 
-    # Assignments are module = 1, quizzes are module = 17
+    # Assignments are module = 1, quizzes are module = 17.
     for (i, assignment) in enumerate(assignments.values()):
         sql = f"""
-            INSERT INTO `mdl_course_modules` 
+            INSERT INTO `mdl_course_modules`
                 (id, course, module, instance, section)
             VALUES (
-                {assignment["id"]}, 
-                {courses[assignment["course"]]["id"]}, 
-                1, 
-                {assignment["id"]}, 
+                {assignment["id"]},
+                {courses[assignment["course"]]["id"]},
+                1,
+                {assignment["id"]},
                 {courses[assignment["course"]]["id"]}
             );
         """
