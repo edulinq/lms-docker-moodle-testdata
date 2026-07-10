@@ -158,34 +158,78 @@ def add_assignments(assignments, courses):
     for assignment in assignments.values():
         if (assignment["course"] not in sections):
             sections[assignment["course"]] = []
+
+            sql = f"""
+                INSERT INTO `mdl_grade_categories`
+                    (id, courseid, depth, path, aggregation, aggregateonlygraded, timecreated, timemodified)
+                VALUES (
+                    {len(sections)},
+                    {courses[assignment["course"]]["id"]},
+                    1,
+                    '/{len(sections)}/',
+                    13,
+                    1,
+                    1,
+                    1
+                )
+            """
+            run_sql(sql)
+
         sections[assignment["course"]].append(assignment["id"])
 
         sql = f"""
             INSERT INTO `mdl_assign`
-                (id, course, name, grade, maxattempts, activity, activityformat)
+                (id, course, name, grade, intro)
             VALUES (
                 {assignment["id"]},
                 {courses[assignment["course"]]["id"]},
                 '{assignment["name"]}',
                 {assignment["max-points"]},
-                1,
-                '',
+                ''
+            );
+        """
+        run_sql(sql)
+
+        sql = f"""
+            INSERT INTO `mdl_grade_items`
+                (id, courseid, categoryid, itemname, itemtype, itemmodule, iteminstance, grademax, aggregationcoef2)
+            VALUES (
+                {assignment["id"]},
+                {courses[assignment["course"]]["id"]},
+                {len(sections)},
+                '{assignment["name"]}',
+                'mod',
+                'assign',
+                '{assignment["id"]}',
+                {assignment["max-points"]},
                 1
             );
         """
         run_sql(sql)
 
-    for (course, value) in sections.items():
+    for (course, assignment_ids) in sections.items():
         sql = f"""
             INSERT INTO `mdl_course_sections`
                 (id, course, sequence)
             VALUES
-                ({courses[course]["id"]}, {courses[course]["id"]}, '{','.join(value)}')
+                ({courses[course]["id"]}, {courses[course]["id"]}, '{','.join(assignment_ids)}')
             ;
         """
         run_sql(sql)
 
-    # Assignments are module = 1, quizzes are module = 17.
+        # Update assignment aggregation coefficients.
+        total_points = sum(assignment["max-points"] for assignment in assignments.values() if (assignment["course"] == course))
+        for id in assignment_ids:
+            sql = f"""
+                UPDATE `mdl_grade_items`
+                SET aggregationcoef2 = grademax / {total_points}
+                WHERE id = {id}
+            """
+            run_sql(sql)
+
+
+
+    # Assignments have module = 1, quizzes have module = 17.
     for (i, assignment) in enumerate(assignments.values()):
         sql = f"""
             INSERT INTO `mdl_course_modules`
