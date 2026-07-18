@@ -8,6 +8,8 @@
     },
     "files": [],
     "headers": {
+        "edq-lms-backend": "moodle",
+        "edq-lms-write": "false",
         "edq-lms-moodle-user": "course-owner"
     },
     "allow_redirects": true,
